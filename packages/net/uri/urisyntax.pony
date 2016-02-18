@@ -1,4 +1,3 @@
-use "debug"
 use "collections"
 
 class val _UriSyntax
@@ -13,18 +12,15 @@ class val _UriSyntax
     (String, OptionalAuthority, String, OptionalQuery, OptionalFragment,
     USize) ?
   =>
-    _debug("Representation: " + _uri)
     var i: USize = 0
     (let scheme, i) = _parse_scheme(i)
     (let authority, let path, i) = _parse_hier_part(i)
     (let query, i) = _parse_query(i)
     (let fragment, i) = _parse_fragment(i)
-    _debug("Out of '"+_uri+"' used by URI: '"+_substring(0, i)+"'")
 
     (scheme, authority, path, query, fragment, i)
 
   fun _parse_scheme(pos: USize): (String, USize)? =>
-    _debug("Scheme from "+_uri.substring(pos.isize()))
     var i = pos
 
     if not _alpha(_at(i)) then error end // first char must be alpha
@@ -41,7 +37,6 @@ class val _UriSyntax
     error // colon has not been found
 
   fun _parse_hier_part(pos: USize): (OptionalAuthority, String, USize)? =>
-    _debug("Hier part from "+_uri.substring(pos.isize()))
     var i = pos
 
     (let authority, i) = _parse_authority(i)
@@ -83,11 +78,9 @@ class val _UriSyntax
     (authority, path, i)
 
   fun _parse_authority(pos: USize): (OptionalAuthority, USize)? =>
-    _debug("Authority from "+_uri.substring(pos.isize()))
     var i = pos
 
     i = try _skip_literal("//", i) else return (None, pos) end
-    _debug("Authority detected "+_uri.substring(i.isize()))
 
     (let user_info, i) = _parse_user_info(i)
     (let host, i) = _parse_host(i)
@@ -96,7 +89,6 @@ class val _UriSyntax
     (Authority._create(host, user_info, port), i)
 
   fun _parse_user_info(pos: USize): (OptionalUserInfo, USize)? =>
-    _debug("UserInfo from "+_uri.substring(pos.isize()))
     var i = pos
 
     var colon: (USize | None) = None
@@ -110,7 +102,6 @@ class val _UriSyntax
         | None =>
           UserInfo._create(_substring(pos, i), "")
         else
-          _debug("Unexpected colon type")
           error // match is exhaustive so this should never happen
         end
 
@@ -125,14 +116,12 @@ class val _UriSyntax
     (None, pos)
 
   fun _parse_host(pos: USize): (Host, USize)? =>
-    _debug("Host from "+_uri.substring(pos.isize()))
     try return _parse_ip_literal(pos) end
     try return _parse_ip_v4(pos) end
     try return _parse_reg_name(pos) end
     error
 
   fun _parse_ip_literal(pos: USize): (IpLiteral, USize)? =>
-    _debug("IP literal from "+_uri.substring(pos.isize()))
     var i = pos
 
     i = _skip_literal('[', i)
@@ -144,7 +133,6 @@ class val _UriSyntax
     end
 
   fun _parse_ip_future(pos: USize): (IpFuture, USize)? =>
-    _debug("IP future from "+_uri.substring(pos.isize()))
     var i = pos
 
     i = try _skip_literal("v", i) else _skip_literal("V", i) end
@@ -152,12 +140,9 @@ class val _UriSyntax
     (let version, i) = _parse_ip_future_version(i)
     i = _skip_literal(".", i)
     (let address, i) = _parse_ip_future_address(i)
-    _debug("Extracted IP future address "+address.string())
     (IpFuture(version, address), i)
 
-  fun _parse_ip_future_version(pos: USize): (String, USize)?
-  =>
-    _debug("IP future version from "+_uri.substring(pos.isize()))
+  fun _parse_ip_future_version(pos: USize): (String, USize)? =>
     var i = pos
 
     while _exists(i) and _hex_digit(_at(i)) do
@@ -168,9 +153,7 @@ class val _UriSyntax
 
     (_substring(pos, i), i)
 
-  fun _parse_ip_future_address(pos: USize): (String, USize)?
-  =>
-    _debug("IP future address from "+_uri.substring(pos.isize()))
+  fun _parse_ip_future_address(pos: USize): (String, USize)? =>
     var i = pos
 
     while
@@ -206,7 +189,6 @@ class val _UriSyntax
     (number.u8(10), i)
 
   fun _parse_reg_name(pos: USize): (String, USize)? =>
-    _debug("Reg-name from "+_uri.substring(pos.isize()))
     var i = pos
 
     while
@@ -219,7 +201,6 @@ class val _UriSyntax
     (_substring(pos, i), i)
 
   fun _parse_port(pos: USize): (OptionalPort, USize)? =>
-    _debug("Port from "+_uri.substring(pos.isize()))
     var i = try _skip_literal(":", pos) else return (None, pos) end
 
     while _exists(i) and _digit(_at(i)) do
@@ -232,7 +213,6 @@ class val _UriSyntax
     (port, i)
 
   fun _parse_path_abempty(pos: USize): (String, USize) =>
-    _debug("Path abempty from "+_substring(pos, _uri.size()))
     var i = pos
 
     i = _skip_multi_segments(i)
@@ -240,7 +220,6 @@ class val _UriSyntax
     (_substring(pos, i), i)
 
   fun _parse_path_absolute(pos: USize): (String, USize)? =>
-    _debug("Path absolute from "+_substring(pos, _uri.size()))
     var i = pos
 
     i = _skip_literal('/', i)
@@ -253,7 +232,6 @@ class val _UriSyntax
     (_substring(pos, i), i)
 
   fun _parse_path_noscheme(pos: USize): (String, USize)? =>
-    _debug("Path noscheme from "+_substring(pos, _uri.size()))
     var i = _skip_segment_nz_nc(pos)
 
     i = _skip_multi_segments(i)
@@ -261,7 +239,6 @@ class val _UriSyntax
     (_substring(pos, i), i)
 
   fun _parse_path_rootless(pos: USize): (String, USize)? =>
-    _debug("Path rootless from "+_substring(pos, _uri.size()))
     var i = _skip_segment_nz(pos)
 
     i = _skip_multi_segments(i)
@@ -385,9 +362,3 @@ class val _UriSyntax
   fun _at(index: USize): U8? => _uri(index)
 
   fun _exists(i: USize): Bool => i <= _max_i
-
-  fun _debug(s: String) =>
-    """
-    """
-    Debug.out(s)
-    // @fprintf[I32](@os_stdout[Pointer[U8]](), "%s\n".cstring(), s.cstring())
