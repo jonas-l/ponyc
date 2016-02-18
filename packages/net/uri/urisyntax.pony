@@ -3,10 +3,12 @@ use "collections"
 class val _UriSyntax
   let _uri: String
   let _max_i: USize
+  let _ip_syntax: _IpSyntax
 
   new val create(source: String) =>
     _uri = source
     _max_i = source.size() - 1
+    _ip_syntax = _IpSyntax(_uri)
 
   fun parse_uri():
     (String, OptionalAuthority, String, OptionalQuery, OptionalFragment,
@@ -133,55 +135,15 @@ class val _UriSyntax
     end
 
   fun _parse_ip_future(pos: USize): (IpFuture, USize)? =>
-    var i = pos
-
-    i = try _skip_literal("v", i) else _skip_literal("V", i) end
-    
-    (let version, i) = _parse_ip_future_version(i)
-    i = _skip_literal(".", i)
-    (let address, i) = _parse_ip_future_address(i)
+    (let version, let address, let i) = _ip_syntax.parse_future(pos)
     (IpFuture(version, address), i)
 
-  fun _parse_ip_future_version(pos: USize): (String, USize)? =>
-    var i = pos
-
-    while _exists(i) and _hex_digit(_at(i)) do
-      i = i + 1
-    else
-      error
-    end
-
-    (_substring(pos, i), i)
-
-  fun _parse_ip_future_address(pos: USize): (String, USize)? =>
-    var i = pos
-
-    while
-      _exists(i) and
-      (_unreserved(_at(i)) or _sub_delim(_at(i)) or (_at(i) == ':'))
-    do
-      i = i + 1
-    else
-      error
-    end
-
-    (_substring(pos, i), i)
-
   fun _parse_ip_v6(pos: USize): (Ip6, USize)? =>
-    var i = pos
-
-    while _exists(i) do
-      match _at(i)
-      | let c: U8 if _hex_digit(c) | ':' | '.' => i = i + 1
-      else
-        break
-      end
-    end
-
+    (_, _, _, _, _, _, _, _, let i) = _ip_syntax.parse_v6(pos)
     (Ip6.from(_substring(pos, i)), i)
 
   fun _parse_ip_v4(pos: USize): (Ip4, USize)? =>
-    (let b1, let b2, let b3, let b4, let i) = _IpSyntax(_uri).parse_v4(pos)
+    (let b1, let b2, let b3, let b4, let i) = _ip_syntax.parse_v4(pos)
     (Ip4(b1, b2, b3, b4), i)
 
   fun _parse_dec_octet(pos: USize): (U8, USize)? =>
