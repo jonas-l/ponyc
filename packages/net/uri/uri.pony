@@ -1,5 +1,3 @@
-use "debug"
-
 class val Uri
   """
   Represents a Uniform Resource Identifier (URI) as defined in [RFC3986][1].
