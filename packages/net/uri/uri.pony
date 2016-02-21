@@ -29,15 +29,26 @@ class val Uri
     if not entire_rep_used then error end
 
   fun string(fmt: FormatSettings = FormatSettingsDefault): String iso^ =>
+    _string(fmt, false)
+
+  fun string_unsafe(fmt: FormatSettings = FormatSettingsDefault): String iso^
+  =>
+    _string(fmt, true)
+
+  fun _string(fmt: FormatSettings, unsafe: Bool): String iso^ =>
     let s = recover String end
 
     s.append(scheme); s.append(":")
-    try s.append("//" + (authority as Authority).string()) end
+    try s.append("//" + _authority_string(unsafe)) end
     s.append(path)
     try s.append("?" + (query as String)) end
     try s.append("#" + (fragment as String)) end
 
     consume s
+
+  fun _authority_string(unsafe: Bool): String iso^ ? =>
+    let auth = (authority as Authority)
+    if unsafe then auth.string_unsafe() else auth.string() end
 
 type OptionalAuthority is (Authority | None)
 
@@ -54,9 +65,16 @@ class val Authority
     port = port'
 
   fun string(fmt: FormatSettings = FormatSettingsDefault): String iso^ =>
+    _string(fmt, false)
+
+  fun string_unsafe(fmt: FormatSettings = FormatSettingsDefault): String iso^
+  =>
+    _string(fmt, true)
+
+  fun _string(fmt: FormatSettings, unsafe: Bool): String iso^ =>
     let s = recover String end
 
-    try s.append((user_info as UserInfo).string() + "@") end
+    try s.append(_user_info_string(unsafe) + "@") end
 
     match host
     | let h: IpLiteral => s.append("[" + h.string() + "]")
@@ -67,6 +85,10 @@ class val Authority
     try s.append(":" + (port as U16).string()) end
 
     consume s
+
+  fun _user_info_string(unsafe: Bool): String iso^ ? =>
+    let info = user_info as UserInfo
+    if unsafe then info.string_unsafe() else info.string() end
 
 type OptionalUserInfo is (UserInfo | None)
 type OptionalPort is (U16 | None)
@@ -80,10 +102,19 @@ class val UserInfo
     password = password'
 
   fun string(fmt: FormatSettings = FormatSettingsDefault): String iso^ =>
+    _string(fmt, false)
+
+  fun string_unsafe(fmt: FormatSettings = FormatSettingsDefault): String iso^
+  =>
+    _string(fmt, true)
+
+  fun _string(fmt: FormatSettings, unsafe: Bool): String iso^ =>
     let s = recover String end
 
     s.append(user)
-    if password.size() > 0 then s.append(":******") end
+    if password.size() > 0 then
+      s.append(":" + if unsafe then password else "******" end)
+    end
 
     consume s
 

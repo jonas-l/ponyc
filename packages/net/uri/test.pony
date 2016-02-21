@@ -39,6 +39,7 @@ actor Main is TestList
     test(_UriConvertedToStringProducesInitialRepresentation)
     test(_UriConvertedToStringOmitsEmptyPassword)
     test(_UriConvertedToStringHidesPassword)
+    test(_UriConvertedToUnsafeStringRevealsPassword)
     test(_UriConvertedToStringOmitsEmptyPort)
     test(_IPv6ConvertedToStringIsEqualToInitialString)
     test(_IPv6ConvertedToStringPresentsEveryBlock)
@@ -343,6 +344,13 @@ class iso _UriConvertedToStringHidesPassword is UnitTest
 
   fun apply(h: TestHelper) ? =>
     h.assert_eq[String]("s://user:******@h", Uri("s://user:pass@h").string())
+
+class iso _UriConvertedToUnsafeStringRevealsPassword is UnitTest
+  fun name(): String =>
+    "net/uri/Uri converted to unsafe string reveals password"
+
+  fun apply(h: TestHelper) ? =>
+    h.assert_eq[String]("s://u:pass@h", Uri("s://u:pass@h").string_unsafe())
 
 class iso _UriConvertedToStringOmitsEmptyPort is UnitTest
   fun name(): String =>
