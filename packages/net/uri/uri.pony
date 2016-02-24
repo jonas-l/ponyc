@@ -159,6 +159,7 @@ class val Ip6 is (Stringable & Equatable[Ip6])
   let b6: U16
   let b7: U16
   let b8: U16
+  let zone_id: (String | None)
   let _string: String
 
   new val create(b1': U16, b2': U16, b3': U16, b4': U16, b5': U16, b6': U16,
@@ -166,6 +167,7 @@ class val Ip6 is (Stringable & Equatable[Ip6])
   =>
     b1 = b1'; b2 = b2'; b3 = b3'; b4 = b4'
     b5 = b5'; b6 = b6'; b7 = b7'; b8 = b8'
+    zone_id = None
 
     let fmt = FormatSettingsInt.set_format(FormatHexBare)
 
@@ -177,11 +179,25 @@ class val Ip6 is (Stringable & Equatable[Ip6])
   new val from(representation: String) ? =>
     _string = representation
 
-    (b1, b2, b3, b4, b5, b6, b7, b8, let i)
+    (b1, b2, b3, b4, b5, b6, b7, b8, zone_id, let i)
       = _IpSyntax(representation).parse_v6()
 
     let entire_rep_used = i == representation.size()
     if not entire_rep_used then error end
+
+  new val with_zone_id(b1': U16, b2': U16, b3': U16, b4': U16, b5': U16,
+    b6': U16, b7': U16, b8': U16, zone_id': String) ? =>
+
+    b1 = b1'; b2 = b2'; b3 = b3'; b4 = b4'
+    b5 = b5'; b6 = b6'; b7 = b7'; b8 = b8'
+    zone_id = zone_id'
+
+    let fmt = FormatSettingsInt.set_format(FormatHexBare)
+
+    _string = ":".join([as Stringable:
+      b1.string(fmt), b2.string(fmt), b3.string(fmt), b4.string(fmt),
+      b5.string(fmt), b6.string(fmt), b7.string(fmt), b8.string(fmt)
+    ]) + try "%" + (zone_id as String) else "" end
 
   fun eq(that: Ip6): Bool =>
     (b1 == that.b1) and (b2 == that.b2) and (b3 == that.b3) and

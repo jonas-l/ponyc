@@ -44,7 +44,7 @@ class val _IpSyntax
     (_substring(pos, i), i)
 
   fun parse_v6(pos: USize = 0):
-    (U16, U16, U16, U16, U16, U16, U16, U16, USize)?
+    (U16, U16, U16, U16, U16, U16, U16, U16, String, USize)?
   =>
     var i = pos
 
@@ -81,7 +81,30 @@ class val _IpSyntax
 
     if blocks.size() != 8 then error end
 
-    (blocks(0), blocks(1), blocks(2), blocks(3), blocks(4), blocks(5), blocks(6), blocks(7), i)
+    let zone_id_specified = try
+      i = _skip_literal("%25", i)
+      true
+    else
+      false
+    end
+
+    let zone_id = if zone_id_specified then
+      (let id, i) = _parse_zone_id(i)
+      id
+    else
+      None
+    end
+
+    (blocks(0), blocks(1), blocks(2), blocks(3), blocks(4), blocks(5), blocks(6), blocks(7), zone_id, i)
+
+  fun _parse_zone_id(pos: USize): (String, USize)? =>
+    var i = pos
+
+    while _exists(i) and (_unreserved(_at(i)) or _pct_encoded_at(i)) do
+      i = i + 1
+    end
+
+    (_substring(pos, i), i)
   
   fun _parse_h16(pos: USize): (U16, USize)? =>
     var i = pos
@@ -127,6 +150,14 @@ class val _IpSyntax
     var i = pos
     while _exists(i) and _digit(_at(i)) do i = i + 1 else error end
     (_substring(pos, i), i)
+
+  fun _pct_encoded_at(pos: USize): Bool =>
+    try
+      _skip_literal("%", pos)
+      _hex_digit(_at(pos + 1)) and _hex_digit(_at(pos + 2))
+    else
+      false
+    end
 
   fun _skip_literal(literal: (U8 | String), pos: USize): USize? =>
     match literal
