@@ -112,7 +112,8 @@ class iso _UriHostCanBeIp6 is UnitTest
     assert_eq(h, Ip6(10, 0, 0, 0, 0, 0, 0, 11), "[A::b]")
     assert_eq(h, Ip6(10, 0, 0, 0, 0, 0, (1*256)+3, (3*256)+7), "[A::1.3.3.7]")
 
-    h.assert_error(_ConstructorOf.uri("s://[:::]"), "Invalid compact")
+    h.assert_error(_ConstructorOf.uri("s://[:]"), "':' at the beginning")
+    h.assert_error(_ConstructorOf.uri("s://[:::]"), "':::' at the beginning")
     h.assert_error(_ConstructorOf.uri("s://[1:2:3:4:5:6:7:8:9]"), "9 blocks")
     h.assert_error(_ConstructorOf.uri("s://[1::1.3.3.7:1]"), "IPv4 not last")
 

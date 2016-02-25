@@ -48,17 +48,10 @@ class val _IpSyntax
   =>
     var i = pos
 
-    var zeros_at = try i = _skip_literal("::", i) - 1; USize(0) else None end
-    
+    var zeros_at = try i = _skip_literal("::", i); USize(0) else None end
     var blocks: Array[U16] = recover Array[U16](8) end
     while _exists(i) do
-      try
-        i = _skip_literal(':', i)
-        if not (zeros_at is None) then error end
-        zeros_at = blocks.size()
-        continue
-      end
-      
+      // IPv4 address
       if blocks.size() <= 6 then
         try
           (let b1, let b2, let b3, let b4, i) = parse_v4(i)
@@ -68,9 +61,26 @@ class val _IpSyntax
         end
       end
       
+      // IPv6 block
       (let block, i) = try _parse_h16(i) else break end
       blocks.push(block)
       
+      // potential compacted zeros
+      let potential_zeros_at = try
+        i = _skip_literal("::", i)
+        blocks.size()
+      else
+        None
+      end
+
+      if potential_zeros_at isnt None then
+        if zeros_at isnt None then error end
+
+        zeros_at = potential_zeros_at
+        continue
+      end
+      
+      // skip IPv6 blocks' separator      
       try i = _skip_literal(':', i) else break end
     end
 
