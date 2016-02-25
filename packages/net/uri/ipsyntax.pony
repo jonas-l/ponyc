@@ -48,7 +48,7 @@ class val _IpSyntax
   =>
     var i = pos
 
-    var zeros_at = try i = _skip_literal("::", i); USize(0) else None end
+    var zeros_at = try i = _skip_literal("::", i) - 1; USize(0) else None end
     
     var blocks: Array[U16] = recover Array[U16](8) end
     while _exists(i) do

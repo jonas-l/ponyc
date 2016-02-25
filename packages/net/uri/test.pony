@@ -49,30 +49,30 @@ class iso _UriSchemeIsMandatory is UnitTest
   fun name(): String => "net/uri/Uri.scheme is mandatory"
 
   fun apply(h: TestHelper)=>
-    h.assert_error(_WhenConstructing.uri(""), "Empty representation")
+    h.assert_error(_ConstructorOf.uri(""), "Empty representation")
 
 class iso _UriSchemeIsNeverEmpty is UnitTest
   fun name(): String => "net/uri/Uri.scheme is never empty"
 
   fun apply(h: TestHelper)=>
-  h.assert_error(_WhenConstructing.uri(":"), "Scheme must be not empty")
+  h.assert_error(_ConstructorOf.uri(":"), "Scheme must be not empty")
 
 class iso _UriSchemeStartsWithAlpha is UnitTest
   fun name(): String => "net/uri/Uri.scheme starts with alpha"
 
   fun apply(h: TestHelper)=>
-  h.assert_error(_WhenConstructing.uri("-:"), "Starts with '-'")
-  h.assert_error(_WhenConstructing.uri("+:"), "Starts with '+'")
-  h.assert_error(_WhenConstructing.uri(".:"), "Starts with '.'")
-  h.assert_error(_WhenConstructing.uri("5:"), "Starts with digit")
-  h.assert_error(_WhenConstructing.uri("*:"), "Starts with invalid char")
+  h.assert_error(_ConstructorOf.uri("-:"), "Starts with '-'")
+  h.assert_error(_ConstructorOf.uri("+:"), "Starts with '+'")
+  h.assert_error(_ConstructorOf.uri(".:"), "Starts with '.'")
+  h.assert_error(_ConstructorOf.uri("5:"), "Starts with digit")
+  h.assert_error(_ConstructorOf.uri("*:"), "Starts with invalid char")
 
 class iso _UriSchemeContainsAlphanumericPlusMinusDot is UnitTest
   fun name(): String =>
     "net/uri/Uri.scheme contains only alphanumeric, -, + and ."
 
   fun apply(h: TestHelper) ? =>
-    h.assert_error(_WhenConstructing.uri("invalid/char:"), "Invalid char")
+    h.assert_error(_ConstructorOf.uri("invalid/char:"), "Invalid char")
 
     let uri = Uri("special-and+numbers.123:")
     h.assert_eq[String]("special-and+numbers.123", uri.scheme)
@@ -112,9 +112,9 @@ class iso _UriHostCanBeIp6 is UnitTest
     assert_eq(h, Ip6(10, 0, 0, 0, 0, 0, 0, 11), "[A::b]")
     assert_eq(h, Ip6(10, 0, 0, 0, 0, 0, (1*256)+3, (3*256)+7), "[A::1.3.3.7]")
 
-    h.assert_error(_WhenConstructing.uri("s:/[:::]"), "Invalid compact")
-    h.assert_error(_WhenConstructing.uri("s:/[1:2:3:4:5:6:7:8:9]"), "9 blocks")
-    h.assert_error(_WhenConstructing.uri("s:/[1::1.3.3.7:1]"), "IPv4 not last")
+    h.assert_error(_ConstructorOf.uri("s://[:::]"), "Invalid compact")
+    h.assert_error(_ConstructorOf.uri("s://[1:2:3:4:5:6:7:8:9]"), "9 blocks")
+    h.assert_error(_ConstructorOf.uri("s://[1::1.3.3.7:1]"), "IPv4 not last")
 
   fun assert_eq(h: TestHelper, expected: Ip6, representation: String) ? =>
     let host = _Authority.host(Uri("s://" + representation), h)
@@ -312,7 +312,7 @@ class iso _UriUsesEntireRepresentation is UnitTest
     "net/uri/Uri uses entire representation"
 
   fun apply(h: TestHelper) =>
-    h.assert_error(_WhenConstructing.uri("s://host other text"), "other text")
+    h.assert_error(_ConstructorOf.uri("s://host other text"), "other text")
 
 class iso _UriConvertedToStringProducesInitialRepresentation is UnitTest
   fun name(): String =>
@@ -360,7 +360,7 @@ class iso _UriConvertedToStringOmitsEmptyPort is UnitTest
     h.assert_eq[String]("s://host", Uri("s://host:").string())
 
 
-primitive _WhenConstructing
+primitive _ConstructorOf
   fun uri(rep: String): ITest => lambda()(rep)? => Uri(rep) end
 
 primitive _Authority
